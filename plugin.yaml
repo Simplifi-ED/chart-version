@@ -1,0 +1,8 @@
+name: "chart-version"
+version: "0.0.1"
+usage: "Change a Helm chart version"
+description: "Change helm chart version value"
+ignoreFlags: false
+command: "$HELM_PLUGIN_DIR/bin/chart-version"
+hooks:
+  install: "$HELM_PLUGIN_DIR/install-binary.sh"
