@@ -22,7 +22,7 @@ fi
 
 mkdir -p "$HELM_HOME"
 
-: "${HELM_PLUGIN_DIR:="$HELM_HOME/plugins/helm-diff"}"
+: "${HELM_PLUGIN_DIR:="$HELM_HOME/plugins/chart-version"}"
 
 if [ "$SKIP_BIN_INSTALL" = "1" ]; then
   echo "Skipping binary install"
@@ -61,7 +61,7 @@ initOS() {
   # Minimalist GNU for Windows
   MINGW*) OS='windows' ;;
   CYGWIN*) OS='windows' ;;
-  Darwin) OS='macos' ;;
+  Darwin) OS='darwin' ;;
   Linux) OS='linux' ;;
   esac
 }
@@ -69,7 +69,7 @@ initOS() {
 # verifySupported checks that the os/arch combination is supported for
 # binary builds.
 verifySupported() {
-  supported="linux-amd64\nlinux-arm64\nfreebsd-amd64\nmacos-amd64\nmacos-arm64\nwindows-amd64"
+  supported="linux-amd64\nlinux-arm64\nfreebsd-amd64\ndarwin-amd64\ndarwin-arm64"
   if ! echo "${supported}" | grep -q "${OS}-${ARCH}"; then
     echo "No prebuild binary for ${OS}-${ARCH}."
     exit 1
@@ -85,11 +85,14 @@ verifySupported() {
 
 # getDownloadURL checks the latest available version.
 getDownloadURL() {
-  version=$(git -C "$HELM_PLUGIN_DIR" describe --tags --exact-match 2>/dev/null || :)
-  if [ "$SCRIPT_MODE" = "install" ] && [ -n "$version" ]; then
-    DOWNLOAD_URL="https://github.com/$PROJECT_GH/releases/download/$version/chart-version-$OS-$ARCH.tgz"
-  else
-    DOWNLOAD_URL="https://github.com/$PROJECT_GH/releases/latest/download/chart-version-$OS-$ARCH.tgz"
+  version="0.0.1"
+  if [ "${OS}" = "darwin" ]; then
+    ARCH=all
+    if [ "$SCRIPT_MODE" = "install" ] && [ -n "$version" ]; then
+      DOWNLOAD_URL="https://github.com/$PROJECT_GH/releases/download/v$version/chart-version_"$version"_"$OS"_"$ARCH".tar.gz"
+    else
+      DOWNLOAD_URL="https://github.com/$PROJECT_GH/releases/latest/download/chart-version_latest_$ARCH.tar.gz"
+    fi
   fi
 }
 
@@ -98,8 +101,8 @@ mkTempDir() {
   HELM_TMP="$(mktemp -d -t "${PROJECT_NAME}-XXXXXX")"
 }
 rmTempDir() {
-  if [ -d "${HELM_TMP:-/tmp/helm-diff-tmp}" ]; then
-    rm -rf "${HELM_TMP:-/tmp/helm-diff-tmp}"
+  if [ -d "${HELM_TMP:-/tmp/chart-version-tmp}" ]; then
+    rm -rf "${HELM_TMP:-/tmp/chart-version-tmp}"
   fi
 }
 
@@ -146,7 +149,7 @@ exit_trap() {
 testVersion() {
   set +e
   echo "$PROJECT_NAME installed into $HELM_PLUGIN_DIR/$PROJECT_NAME"
-  "${HELM_PLUGIN_DIR}/bin/diff" -h
+  "${HELM_PLUGIN_DIR}/bin/chart-version" -h
   set -e
 }
 

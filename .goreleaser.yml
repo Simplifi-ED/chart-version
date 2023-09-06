@@ -21,7 +21,7 @@ universal_binaries:
 brews:
 - name: chart-version
   homepage: "https://github.com/muandane/homebrew-gitmoji"
-  tap:
+  repository:
     owner: muandane
     name: homebrew-gitmoji
   commit_author:
